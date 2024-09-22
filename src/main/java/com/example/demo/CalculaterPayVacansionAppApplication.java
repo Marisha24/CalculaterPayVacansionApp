@@ -7,7 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class CalculaterPayVacansionAppApplication {
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(CalculaterPayVacansionAppApplication.class, args);
+
 	}
 
 }

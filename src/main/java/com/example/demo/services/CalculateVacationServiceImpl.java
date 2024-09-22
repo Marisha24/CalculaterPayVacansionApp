@@ -3,89 +3,44 @@ package com.example.demo.services;
 import com.example.demo.models.Vacation;
 import org.springframework.stereotype.Service;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class CalculateVacationServiceImpl implements CalculateVacationService{
-
-
+    /** Среднее количество дней в месяце без учета федеральных праздников */
+    private static final double AVERAGE_NUMBER_DAYS_IN_MOUNT = 29.3;
+    /**
+     * Метод для расчёта отпускных без учёта праздников и выходных
+     * Формула: ЗП / 29,3 × кол-во дней отпуска
+     * @return возвращает сумму отпускных, которая придет сотруднику
+     */
     @Override
     public double vacationPayCalculator(Vacation vacation) {
         double vacationPay = 0;
         if(averageSalaryIsValid(vacation.getAverageSalary()) && vacationDaysIsValid(vacation.getNumberOfVacationDays())){
-        // Формула: ЗП / 29,3 × кол-во дней отпуска
-            vacationPay = vacation.getAverageSalary()/29.3 * vacation.getNumberOfVacationDays();
+          vacationPay = vacation.getAverageSalary()/AVERAGE_NUMBER_DAYS_IN_MOUNT * vacation.getNumberOfVacationDays();
         }
         return vacationPay;
     }
+
+    /**
+     * Метод для расчёта отпускных с учётом праздников и выходных
+     *  Формула: ЗП / 29,3 × кол-во дней отпуска
+     * @return возвращает сумму отпускных, которая придет сотруднику
+     */
     @Override
     public double vacationPayCalculatorByDay(Double numberOfDay,Vacation vacation) {
         double vacationPay = 0;
-// Формула: ЗП / 29,3 × кол-во дней отпуска
-        vacationPay = vacation.getAverageSalary()/29.3 * numberOfDay;
-
+        if(averageSalaryIsValid(vacation.getAverageSalary()) && vacationDaysIsValid(vacation.getNumberOfVacationDays())&&startDateIsValid(numberOfDay)) {
+            vacationPay = vacation.getAverageSalary() /AVERAGE_NUMBER_DAYS_IN_MOUNT * numberOfDay;
+        }
         return vacationPay;
 
     }
 
 
-
-    /** Текущий год */
-    public final static int CURRENT_YEAR = LocalDate.now().getYear();
-
     /**
-     * Метод для расчёта количества оплачиваемых дней в отпуске с учётом праздников и выходных
-     *
-     * @return возвращает количество оплачиваемых дней отпуска
+     * Методы валидации
      */
-
-    @Override
-    public double CalculatorByDay(Vacation vacation) {
-        Predicate<LocalDate> holidays = getHolidays()::contains;
-
-        List<LocalDate> listPaidVacationDate = Stream.iterate(vacation.getStartDate(), nextVacationDate -> nextVacationDate.plusDays(1)).limit(vacation.getNumberOfVacationDays())
-                .filter(vacationDate -> !(holidays.test(vacationDate)))
-                .filter(vacationDate -> !(vacationDate.getDayOfWeek() == DayOfWeek.SATURDAY || vacationDate.getDayOfWeek() == DayOfWeek.SUNDAY))
-                .collect(Collectors.toList());
-
-
-        return listPaidVacationDate.size();
-    }
-    /**
-     * Метод для хранения праздничных дней в формате LocalDate
-     * @return возвращает список List, состоящий из праздничных дней
-     */
-    public static List<LocalDate> getHolidays() {
-        List<LocalDate> holidays = Stream.of(
-                LocalDate.of(CURRENT_YEAR, 1, 1),
-                LocalDate.of(CURRENT_YEAR, 1, 2),
-                LocalDate.of(CURRENT_YEAR, 1, 3),
-                LocalDate.of(CURRENT_YEAR, 1, 4),
-                LocalDate.of(CURRENT_YEAR, 1, 5),
-                LocalDate.of(CURRENT_YEAR, 1, 6),
-                LocalDate.of(CURRENT_YEAR, 1, 7),
-                LocalDate.of(CURRENT_YEAR, 1, 8),
-                LocalDate.of(CURRENT_YEAR, 2, 23),
-                LocalDate.of(CURRENT_YEAR, 3, 8),
-                LocalDate.of(CURRENT_YEAR, 5, 1),
-                LocalDate.of(CURRENT_YEAR, 5, 9),
-                LocalDate.of(CURRENT_YEAR, 6, 12),
-                LocalDate.of(CURRENT_YEAR, 11, 4)
-        ).collect(Collectors.toList());
-
-        return Collections.unmodifiableList(holidays);
-    }
-
-
-
-
-//валидация
     private boolean averageSalaryIsValid(Double averageSalary) {
         return averageSalary != null && averageSalary > 0;
     }
@@ -93,7 +48,7 @@ public class CalculateVacationServiceImpl implements CalculateVacationService{
     private boolean vacationDaysIsValid(Integer numberOfVacationDays){
         return numberOfVacationDays != null && numberOfVacationDays > 0;
     }
-    private boolean startDateIsValid(LocalDate startDate) {
+    private boolean startDateIsValid(Double startDate) {
         return startDate != null;
     }
 }
